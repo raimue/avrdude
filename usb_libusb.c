@@ -168,6 +168,13 @@ static int usbdev_open(char * port, union pinfo pinfo, union filedescriptor *fd)
 		      fd->usb.eep = 0;
 		  }
 
+		  if(strstr(product, "mEDBG") != NULL)
+		  {
+		      /* The AVR Xplained Mini uses different endpoints. */
+		      fd->usb.rep = 0x81;
+		      fd->usb.wep = 0x02;
+		  }
+
 		  if (verbose)
 		    fprintf(stderr,
 			    "%s: usbdev_open(): Found %s, serno: %s\n",
