@@ -378,7 +378,7 @@ static int usbdev_send(union filedescriptor *fd, unsigned char *bp, size_t mlen)
     }
     bp += tx_size;
     mlen -= tx_size;
-  } while (tx_size == fd->usb.max_xfer);
+  } while (mlen > 0);
 
   if (verbose > 3)
   {
