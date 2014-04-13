@@ -495,6 +495,52 @@ static int jtag3_edbg_send(PROGRAMMER * pgm, unsigned char * data, size_t len)
 }
 
 /*
+ * Get information about the connected CMSIS-DAP programmer
+ */
+static int jtag3_edbg_info(PROGRAMMER * pgm, int id, unsigned char *info, size_t len)
+{
+  unsigned char buf[USBDEV_MAX_XFER_3];
+  unsigned char status[USBDEV_MAX_XFER_3];
+  int rv;
+
+  buf[0] = CMSISDAP_CMD_INFO;
+  buf[1] = id;
+  if (serial_send(&pgm->fd, buf, USBDEV_MAX_XFER_3) != 0) {
+    fprintf(stderr,
+        "%s: jtag3_edbg_info(): failed to send command to serial port\n",
+        progname);
+    return -1;
+  }
+  memset(status, 0, sizeof(status));
+  rv = serial_recv(&pgm->fd, status, USBDEV_MAX_XFER_3);
+  if (rv != USBDEV_MAX_XFER_3) {
+    fprintf(stderr,
+        "%s: jtag3_edbg_info(): failed to read from serial port (%d)\n",
+        progname, rv);
+    return -1;
+  }
+
+  if (status[0] != CMSISDAP_CMD_INFO) {
+    fprintf(stderr,
+        "%s: jtag3_edbg_info(): unexpected response 0x%02x, 0x%02x\n",
+        progname, status[0], status[1]);
+    return -1;
+  }
+
+  unsigned char l = status[1];
+  if (l <= len) {
+    memcpy(info, status + 2, l);
+  } else {
+    fprintf(stderr,
+        "%s: jtag3_edbg_info(): response 0x%02x with unexpected length (%u > %lu)\n",
+        progname, status[0], l, (unsigned long)len);
+    return -1;
+  }
+
+  return l;
+}
+
+/*
  * Send out all the CMSIS-DAP stuff needed to prepare the ICE.
  */
 static int jtag3_edbg_prepare(PROGRAMMER * pgm)
