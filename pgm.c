@@ -165,6 +165,18 @@ PROGRAMMER * pgm_dup(const PROGRAMMER * const src)
   memcpy(pgm, src, sizeof(*pgm));
 
   pgm->id = lcreat(NULL, 0);
+  pgm->usbpid = lcreat(NULL, 0);
+  LNODEID ln;
+  for (ln = lfirst(src->usbpid); ln; ln = lnext(ln)) {
+    int *ip = malloc(sizeof(int));
+    if (ip == NULL) {
+      fprintf(stderr, "%s: out of memory allocating programmer structure\n",
+              progname);
+      exit(1);
+    }
+    *ip = *(int *) ldata(ln);
+    ladd(pgm->usbpid, ip);
+  }
 
   return pgm;
 }
